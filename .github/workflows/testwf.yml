@@ -1,4 +1,4 @@
-name: Hello World Workflow
+name: Update PR with SonarQube Code Coverage
 
 on:
   pull_request:
@@ -6,26 +6,62 @@ on:
       - main
 
 jobs:
-  say-hello:
+  fetch-coverage-and-update-pr:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+
     steps:
-      # Step to checkout the repository
-      - name: Checkout Repository
-        uses: actions/checkout@v2
+    # Step to checkout the repository
+    - name: Checkout Repository
+      uses: actions/checkout@v2
 
-      # Step to print a hello world message
-      - name: Say Hello
-        run: echo "Hello, World!"
+    # Step to authenticate with GitHub API (if needed)
+    - name: Set up GitHub Token
+      run: echo "GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_ENV
+      
+    # Step to fetch code coverage from SonarQube (for demonstration, using a simple JSON response)
+    - name: Fetch Code Coverage from SonarQube
+      env:
+        SONARQUBE_URL: 'https://your-sonarqube-instance.com'
+        SONARQUBE_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
+        PR_NUMBER: ${{ github.event.number }}
+      run: |
+        # For demonstration, using a dummy JSON response
+        COVERAGE_DATA='{"component":{"measures":[{"metric":"coverage","value":"85.0"},{"metric":"branch_coverage","value":"70.0"},{"metric":"line_coverage","value":"90.0"}]}}'
+        
+        echo "COVERAGE_DATA=$COVERAGE_DATA" >> $GITHUB_ENV
 
-      # Optional step to post a comment on the PR
-      - name: Comment on PR with Hello World
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PR_NUMBER: ${{ github.event.number }}
-        run: |
-          curl -s -X POST \
-            -H "Accept: application/vnd.github.v3+json" \
-            -H "Authorization: token ${GITHUB_TOKEN}" \
-            https://api.github.com/repos/${{ github.repository }}/issues/${PR_NUMBER}/comments \
-            -d "{\"body\": \"Hello, World! This is a comment from the GitHub Actions workflow.\"}"
+    # Step to parse JSON data and generate HTML content
+    - name: Generate HTML Report from Coverage Data
+      env:
+        COVERAGE_DATA: ${{ env.COVERAGE_DATA }}
+      run: |
+        # Parse the coverage data using jq or another tool
+        COVERAGE=$(echo "$COVERAGE_DATA" | jq -r '.component.measures[] | select(.metric == "coverage") | .value')
+        BRANCH_COVERAGE=$(echo "$COVERAGE_DATA" | jq -r '.component.measures[] | select(.metric == "branch_coverage") | .value')
+        LINE_COVERAGE=$(echo "$COVERAGE_DATA" | jq -r '.component.measures[] | select(.metric == "line_coverage") | .value')
+
+        # Create an HTML snippet with the coverage data
+        HTML_CONTENT="<h1>Code Coverage Report</h1><p>Coverage: ${COVERAGE}%</p><p>Branch Coverage: ${BRANCH_COVERAGE}%</p><p>Line Coverage: ${LINE_COVERAGE}%</p>"
+        
+        echo "HTML_CONTENT=$HTML_CONTENT" >> $GITHUB_ENV
+
+    # Step to update the PR with HTML content
+    - name: Update PR with Code Coverage Report
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        HTML_CONTENT: ${{ env.HTML_CONTENT }}
+        PR_NUMBER: ${{ github.event.number }}
+      run: |
+        echo "GITHUB_TOKEN=$GITHUB_TOKEN"
+        echo "PR_NUMBER=$PR_NUMBER"
+        
+        curl -s -X POST \
+          -H "Accept: application/vnd.github.v3+json" \
+          -H "Authorization: token ${GITHUB_TOKEN}" \
+          https://api.github.com/repos/${{ github.repository }}/issues/${PR_NUMBER}/comments \
+          -d "{\"body\": \"${HTML_CONTENT}\"}"
