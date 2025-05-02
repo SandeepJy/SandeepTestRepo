@@ -71,7 +71,7 @@ jobs:
         # Debugging: Print the comments response
         echo "Comments Response: $COMMENTS_RESPONSE"
 
-        Check if the response is a valid JSON array and not an error message
+        #Check if the response is a valid JSON array and not an error message
         if echo "$COMMENTS_RESPONSE" | jq -e 'type == "array"' > /dev/null 2>&1; then
           COMMENTS=$COMMENTS_RESPONSE
 
