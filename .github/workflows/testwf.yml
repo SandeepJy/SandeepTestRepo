@@ -83,14 +83,14 @@ jobs:
             curl -s -X PATCH \
               -H "Accept: application/vnd.github.v3+json" \
               -H "Authorization: token ${GITHUB_TOKEN}" \
-              https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/issues/comments/${COMMENT_ID} \
+              https://api.github.com/repos/${REPO_NAME}/issues/comments/${COMMENT_ID} \
               -d "{\"body\": \"<!-- CODE_COVERAGE_COMMENT -->\n${HTML_CONTENT}\"}"
           else
             echo "Creating new comment"
             curl -s -X POST \
               -H "Accept: application/vnd.github.v3+json" \
               -H "Authorization: token ${GITHUB_TOKEN}" \
-              https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/issues/${PR_NUMBER}/comments \
+              https://api.github.com/repos/${REPO_NAME}/issues/${PR_NUMBER}/comments \
               -d "{\"body\": \"<!-- CODE_COVERAGE_COMMENT -->\n${HTML_CONTENT}\"}"
           fi
         else
