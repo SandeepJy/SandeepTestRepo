@@ -1,3 +1,105 @@
+# name: Update PR with SonarQube Code Coverage
+
+# on:
+#   pull_request:
+#     branches:
+#       - main
+
+# jobs:
+#   fetch-coverage-and-update-pr:
+#     runs-on: ubuntu-latest
+
+#     permissions:
+#       contents: read
+#       issues: write
+#       pull-requests: write
+
+#     steps:
+#     # Step to checkout the repository
+#     - name: Checkout Repository
+#       uses: actions/checkout@v2
+
+#     # Step to authenticate with GitHub API (if needed)
+#     - name: Set up GitHub Token
+#       run: echo "GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_ENV
+      
+#     # Step to fetch code coverage from SonarQube (for demonstration, using a simple JSON response)
+#     - name: Fetch Code Coverage from SonarQube
+#       env:
+#         SONARQUBE_URL: 'https://your-sonarqube-instance.com'
+#         SONARQUBE_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
+#         PR_NUMBER: ${{ github.event.number }}
+#       run: |
+#         # For demonstration, using a dummy JSON response
+#         COVERAGE_DATA='{"component":{"measures":[{"metric":"coverage","value":"13.0"},{"metric":"branch_coverage","value":"79.0"},{"metric":"line_coverage","value":"90.0"}]}}'
+        
+#         echo "COVERAGE_DATA=$COVERAGE_DATA" >> $GITHUB_ENV
+
+#     # Step to parse JSON data and generate HTML content
+#     - name: Generate HTML Report from Coverage Data
+#       env:
+#         COVERAGE_DATA: ${{ env.COVERAGE_DATA }}
+#       run: |
+#         # Parse the coverage data using jq or another tool
+#         COVERAGE=$(echo "$COVERAGE_DATA" | jq -r '.component.measures[] | select(.metric == "coverage") | .value')
+#         BRANCH_COVERAGE=$(echo "$COVERAGE_DATA" | jq -r '.component.measures[] | select(.metric == "branch_coverage") | .value')
+#         LINE_COVERAGE=$(echo "$COVERAGE_DATA" | jq -r '.component.measures[] | select(.metric == "line_coverage") | .value')
+
+#         # Create an HTML snippet with the coverage data
+#         HTML_CONTENT="<h1>Code Coverage Report</h1><p>Coverage: ${COVERAGE}%</p><p>Branch Coverage: ${BRANCH_COVERAGE}%</p><p>Line Coverage: ${LINE_COVERAGE}%</p>"
+        
+#         echo "HTML_CONTENT=$HTML_CONTENT" >> $GITHUB_ENV
+
+#     # Step to check for existing comment and update or create
+#     - name: Check for Existing Comment and Update or Create
+#       env:
+#         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#         HTML_CONTENT: ${{ env.HTML_CONTENT }}
+#         PR_NUMBER: ${{ github.event.number }}
+#       run: |
+#         REPO_OWNER=$(echo "${{ github.repository_owner }}")
+#         REPO_NAME=$(echo "${{ github.repository }}")
+
+#         # Print the PR number for debugging
+#         echo "PR Number: ${PR_NUMBER}"
+
+#         # Fetch all comments on the PR
+#         COMMENTS_RESPONSE=$(curl -s -H "Accept: application/vnd.github.v3+json" \
+#           -H "Authorization: token ${GITHUB_TOKEN}" \
+#           https://api.github.com/repos/${REPO_NAME}/issues/${PR_NUMBER}/comments)
+
+#         # Debugging: Print the comments response
+#         # echo "Comments Response: $COMMENTS_RESPONSE"
+
+#         #Check if the response is a valid JSON array and not an error message
+#         if echo "$COMMENTS_RESPONSE" | jq -e 'type == "array"' > /dev/null 2>&1; then
+#           COMMENTS=$COMMENTS_RESPONSE
+
+#           # Check if a comment with the unique marker exists
+#           COMMENT_ID=$(echo "$COMMENTS" | jq -r '.[] | select(.body | contains("<!-- CODE_COVERAGE_COMMENT -->")) | .id')
+
+#           if [ -n "$COMMENT_ID" ]; then
+#             echo "Updating existing comment with ID: $COMMENT_ID"
+#             curl -s -X PATCH \
+#               -H "Accept: application/vnd.github.v3+json" \
+#               -H "Authorization: token ${GITHUB_TOKEN}" \
+#               https://api.github.com/repos/${REPO_NAME}/issues/comments/${COMMENT_ID} \
+#               -d "{\"body\": \"<!-- CODE_COVERAGE_COMMENT -->\n${HTML_CONTENT}\"}"
+#           else
+#             echo "Creating new comment"
+#             curl -s -X POST \
+#               -H "Accept: application/vnd.github.v3+json" \
+#               -H "Authorization: token ${GITHUB_TOKEN}" \
+#               https://api.github.com/repos/${REPO_NAME}/issues/${PR_NUMBER}/comments \
+#               -d "{\"body\": \"<!-- CODE_COVERAGE_COMMENT -->\n${HTML_CONTENT}\"}"
+#           fi
+#         else
+#           echo "Invalid JSON response from GitHub API"
+#           echo "Response: $COMMENTS_RESPONSE"
+#           exit 1
+#         fi
+
+
 name: Update PR with SonarQube Code Coverage
 
 on:
@@ -31,70 +133,66 @@ jobs:
         PR_NUMBER: ${{ github.event.number }}
       run: |
         # For demonstration, using a dummy JSON response
-        COVERAGE_DATA='{"component":{"measures":[{"metric":"coverage","value":"13.0"},{"metric":"branch_coverage","value":"79.0"},{"metric":"line_coverage","value":"90.0"}]}}'
+        COVERAGE_DATA='{"component":{"measures":[{"metric":"coverage","value":"85.0"},{"metric":"branch_coverage","value":"70.0"},{"metric":"line_coverage","value":"90.0"}]}}'
         
         echo "COVERAGE_DATA=$COVERAGE_DATA" >> $GITHUB_ENV
 
     # Step to parse JSON data and generate HTML content
     - name: Generate HTML Report from Coverage Data
+      id: generate_html
       env:
         COVERAGE_DATA: ${{ env.COVERAGE_DATA }}
       run: |
-        # Parse the coverage data using jq or another tool
-        COVERAGE=$(echo "$COVERAGE_DATA" | jq -r '.component.measures[] | select(.metric == "coverage") | .value')
-        BRANCH_COVERAGE=$(echo "$COVERAGE_DATA" | jq -r '.component.measures[] | select(.metric == "branch_coverage") | .value')
-        LINE_COVERAGE=$(echo "$COVERAGE_DATA" | jq -r '.component.measures[] | select(.metric == "line_coverage") | .value')
+        coverage=$(echo "$COVERAGE_DATA" | jq -r '.component.measures[] | select(.metric == "coverage") | .value')
+        branch_coverage=$(echo "$COVERAGE_DATA" | jq -r '.component.measures[] | select(.metric == "branch_coverage") | .value')
+        line_coverage=$(echo "$COVERAGE_DATA" | jq -r '.component.measures[] | select(.metric == "line_coverage") | .value')
 
-        # Create an HTML snippet with the coverage data
-        HTML_CONTENT="<h1>Code Coverage Report</h1><p>Coverage: ${COVERAGE}%</p><p>Branch Coverage: ${BRANCH_COVERAGE}%</p><p>Line Coverage: ${LINE_COVERAGE}%</p>"
+        html_content="<h1>Code Coverage Report</h1><p>Coverage: ${coverage}%</p><p>Branch Coverage: ${branch_coverage}%</p><p>Line Coverage: ${line_coverage}%</p>"
         
-        echo "HTML_CONTENT=$HTML_CONTENT" >> $GITHUB_ENV
+        echo "::set-output name=html_content::$html_content"
 
-    # Step to check for existing comment and update or create
-    - name: Check for Existing Comment and Update or Create
+    # Step to update or create a comment on the PR using GitHub Script
+    - name: Update or Create PR Comment with Code Coverage Data
+      uses: actions/github-script@v6
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        HTML_CONTENT: ${{ env.HTML_CONTENT }}
-        PR_NUMBER: ${{ github.event.number }}
-      run: |
-        REPO_OWNER=$(echo "${{ github.repository_owner }}")
-        REPO_NAME=$(echo "${{ github.repository }}")
+        HTML_CONTENT: ${{ steps.generate_html.outputs.html_content }}
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const { context, github } = require('@actions/github');
 
-        # Print the PR number for debugging
-        echo "PR Number: ${PR_NUMBER}"
+          const owner = context.repo.owner;
+          const repo = context.repo.repo;
+          const pull_number = context.payload.pull_request.number;
 
-        # Fetch all comments on the PR
-        COMMENTS_RESPONSE=$(curl -s -H "Accept: application/vnd.github.v3+json" \
-          -H "Authorization: token ${GITHUB_TOKEN}" \
-          https://api.github.com/repos/${REPO_NAME}/issues/${PR_NUMBER}/comments)
+          console.log(`Fetching comments for PR ${pull_number}`);
 
-        # Debugging: Print the comments response
-        # echo "Comments Response: $COMMENTS_RESPONSE"
+          // Fetch all comments on the PR
+          const { data: comments } = await github.rest.pulls.listReviewComments({
+            owner,
+            repo,
+            pull_number
+          });
 
-        #Check if the response is a valid JSON array and not an error message
-        if echo "$COMMENTS_RESPONSE" | jq -e 'type == "array"' > /dev/null 2>&1; then
-          COMMENTS=$COMMENTS_RESPONSE
+          // Check if a comment with the unique marker exists
+          const existingComment = comments.find(comment => comment.body.includes('<!-- CODE_COVERAGE_COMMENT -->'));
 
-          # Check if a comment with the unique marker exists
-          COMMENT_ID=$(echo "$COMMENTS" | jq -r '.[] | select(.body | contains("<!-- CODE_COVERAGE_COMMENT -->")) | .id')
+          const htmlContent = process.env.HTML_CONTENT;
 
-          if [ -n "$COMMENT_ID" ]; then
-            echo "Updating existing comment with ID: $COMMENT_ID"
-            curl -s -X PATCH \
-              -H "Accept: application/vnd.github.v3+json" \
-              -H "Authorization: token ${GITHUB_TOKEN}" \
-              https://api.github.com/repos/${REPO_NAME}/issues/comments/${COMMENT_ID} \
-              -d "{\"body\": \"<!-- CODE_COVERAGE_COMMENT -->\n${HTML_CONTENT}\"}"
-          else
-            echo "Creating new comment"
-            curl -s -X POST \
-              -H "Accept: application/vnd.github.v3+json" \
-              -H "Authorization: token ${GITHUB_TOKEN}" \
-              https://api.github.com/repos/${REPO_NAME}/issues/${PR_NUMBER}/comments \
-              -d "{\"body\": \"<!-- CODE_COVERAGE_COMMENT -->\n${HTML_CONTENT}\"}"
-          fi
-        else
-          echo "Invalid JSON response from GitHub API"
-          echo "Response: $COMMENTS_RESPONSE"
-          exit 1
-        fi
+          if (existingComment) {
+            console.log(`Updating existing comment with ID: ${existingComment.id}`);
+            await github.rest.pulls.updateReviewComment({
+              owner,
+              repo,
+              comment_id: existingComment.id,
+              body: `<!-- CODE_COVERAGE_COMMENT -->\n${htmlContent}`
+            });
+          } else {
+            console.log('Creating new comment');
+            await github.rest.pulls.createReviewComment({
+              owner,
+              repo,
+              pull_number,
+              body: `<!-- CODE_COVERAGE_COMMENT -->\n${htmlContent}`
+            });
+          }
