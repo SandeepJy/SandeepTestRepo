@@ -65,6 +65,15 @@ jobs:
           -H "Authorization: token ${GITHUB_TOKEN}" \
           https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/issues/${PR_NUMBER}/comments)
 
+        # Debugging: Print the comments response
+        echo "Comments Response: $COMMENTS"
+
+        # Check if the response is a valid JSON array
+        if [ "$(echo "$COMMENTS" | jq -r 'type')" != "array" ]; then
+          echo "Invalid JSON response from GitHub API"
+          exit 1
+        fi
+
         # Check if a comment with the unique marker exists
         COMMENT_ID=$(echo "$COMMENTS" | jq -r '.[] | select(.body | contains("<!-- CODE_COVERAGE_COMMENT -->")) | .id')
 
