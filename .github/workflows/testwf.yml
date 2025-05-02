@@ -50,18 +50,36 @@ jobs:
         
         echo "HTML_CONTENT=$HTML_CONTENT" >> $GITHUB_ENV
 
-    # Step to update the PR with HTML content
-    - name: Update PR with Code Coverage Report
+    # Step to check for existing comment and update or create
+    - name: Check for Existing Comment and Update or Create
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         HTML_CONTENT: ${{ env.HTML_CONTENT }}
         PR_NUMBER: ${{ github.event.number }}
       run: |
-        echo "GITHUB_TOKEN=$GITHUB_TOKEN"
-        echo "PR_NUMBER=$PR_NUMBER"
-        
-        curl -s -X POST \
-          -H "Accept: application/vnd.github.v3+json" \
+        REPO_OWNER=$(echo "${{ github.repository_owner }}")
+        REPO_NAME=$(echo "${{ github.repository }}")
+
+        # Fetch all comments on the PR
+        COMMENTS=$(curl -s -H "Accept: application/vnd.github.v3+json" \
           -H "Authorization: token ${GITHUB_TOKEN}" \
-          https://api.github.com/repos/${{ github.repository }}/issues/${PR_NUMBER}/comments \
-          -d "{\"body\": \"${HTML_CONTENT}\"}"
+          https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/issues/${PR_NUMBER}/comments)
+
+        # Check if a comment with the unique marker exists
+        COMMENT_ID=$(echo "$COMMENTS" | jq -r '.[] | select(.body | contains("<!-- CODE_COVERAGE_COMMENT -->")) | .id')
+
+        if [ -n "$COMMENT_ID" ]; then
+          echo "Updating existing comment with ID: $COMMENT_ID"
+          curl -s -X PATCH \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token ${GITHUB_TOKEN}" \
+            https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/issues/comments/${COMMENT_ID} \
+            -d "{\"body\": \"<!-- CODE_COVERAGE_COMMENT -->\n${HTML_CONTENT}\"}"
+        else
+          echo "Creating new comment"
+          curl -s -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token ${GITHUB_TOKEN}" \
+            https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/issues/${PR_NUMBER}/comments \
+            -d "{\"body\": \"<!-- CODE_COVERAGE_COMMENT -->\n${HTML_CONTENT}\"}"
+        fi
