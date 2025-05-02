@@ -66,7 +66,7 @@ jobs:
         # Fetch all comments on the PR
         COMMENTS_RESPONSE=$(curl -s -H "Accept: application/vnd.github.v3+json" \
           -H "Authorization: token ${GITHUB_TOKEN}" \
-          https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/pulls/${PR_NUMBER}/comments)
+          https://api.github.com/repos/${REPO_NAME}/pulls/${PR_NUMBER}/comments)
 
         # Debugging: Print the comments response
         echo "Comments Response: $COMMENTS_RESPONSE"
