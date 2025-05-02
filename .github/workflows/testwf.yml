@@ -99,7 +99,6 @@
 #           exit 1
 #         fi
 
-
 name: Update PR with SonarQube Code Coverage
 
 on:
@@ -159,18 +158,15 @@ jobs:
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         script: |
-          const { context, github } = require('@actions/github');
-
-          const owner = context.repo.owner;
-          const repo = context.repo.repo;
+          const repo = context.repo;
           const pull_number = context.payload.pull_request.number;
 
           console.log(`Fetching comments for PR ${pull_number}`);
 
-          // Fetch all comments on the PR
+          // Fetch all review comments on the PR
           const { data: comments } = await github.rest.pulls.listReviewComments({
-            owner,
-            repo,
+            owner: repo.owner,
+            repo: repo.repo,
             pull_number
           });
 
@@ -182,16 +178,16 @@ jobs:
           if (existingComment) {
             console.log(`Updating existing comment with ID: ${existingComment.id}`);
             await github.rest.pulls.updateReviewComment({
-              owner,
-              repo,
+              owner: repo.owner,
+              repo: repo.repo,
               comment_id: existingComment.id,
               body: `<!-- CODE_COVERAGE_COMMENT -->\n${htmlContent}`
             });
           } else {
             console.log('Creating new comment');
             await github.rest.pulls.createReviewComment({
-              owner,
-              repo,
+              owner: repo.owner,
+              repo: repo.repo,
               pull_number,
               body: `<!-- CODE_COVERAGE_COMMENT -->\n${htmlContent}`
             });
