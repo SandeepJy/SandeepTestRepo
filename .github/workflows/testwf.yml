@@ -31,7 +31,7 @@ jobs:
         PR_NUMBER: ${{ github.event.number }}
       run: |
         # For demonstration, using a dummy JSON response
-        COVERAGE_DATA='{"component":{"measures":[{"metric":"coverage","value":"39.0"},{"metric":"branch_coverage","value":"99.0"},{"metric":"line_coverage","value":"90.0"}]}}'
+        COVERAGE_DATA='{"component":{"measures":[{"metric":"coverage","value":"19.0"},{"metric":"branch_coverage","value":"99.0"},{"metric":"line_coverage","value":"90.0"}]}}'
         
         echo "COVERAGE_DATA=$COVERAGE_DATA" >> $GITHUB_ENV
 
@@ -69,7 +69,7 @@ jobs:
           https://api.github.com/repos/${REPO_NAME}/issues/${PR_NUMBER}/comments)
 
         # Debugging: Print the comments response
-        echo "Comments Response: $COMMENTS_RESPONSE"
+        # echo "Comments Response: $COMMENTS_RESPONSE"
 
         #Check if the response is a valid JSON array and not an error message
         if echo "$COMMENTS_RESPONSE" | jq -e 'type == "array"' > /dev/null 2>&1; then
