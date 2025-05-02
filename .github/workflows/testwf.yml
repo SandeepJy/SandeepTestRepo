@@ -98,7 +98,6 @@
 #           echo "Response: $COMMENTS_RESPONSE"
 #           exit 1
 #         fi
-
 name: Update PR with SonarQube Code Coverage
 
 on:
@@ -163,11 +162,11 @@ jobs:
 
           console.log(`Fetching comments for PR ${pull_number}`);
 
-          // Fetch all review comments on the PR
-          const { data: comments } = await github.rest.pulls.listReviewComments({
+          // Fetch all comments on the PR
+          const { data: comments } = await github.rest.issues.listComments({
             owner: repo.owner,
             repo: repo.repo,
-            pull_number
+            issue_number: pull_number
           });
 
           // Check if a comment with the unique marker exists
@@ -177,7 +176,7 @@ jobs:
 
           if (existingComment) {
             console.log(`Updating existing comment with ID: ${existingComment.id}`);
-            await github.rest.pulls.updateReviewComment({
+            await github.rest.issues.updateComment({
               owner: repo.owner,
               repo: repo.repo,
               comment_id: existingComment.id,
@@ -185,10 +184,10 @@ jobs:
             });
           } else {
             console.log('Creating new comment');
-            await github.rest.pulls.createReviewComment({
+            await github.rest.issues.createComment({
               owner: repo.owner,
               repo: repo.repo,
-              pull_number,
+              issue_number: pull_number,
               body: `<!-- CODE_COVERAGE_COMMENT -->\n${htmlContent}`
             });
           }
