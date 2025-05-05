@@ -180,7 +180,7 @@ jobs:
               owner: repo.owner,
               repo: repo.repo,
               comment_id: existingComment.id,
-              body: `<!-- CODE_COVERAGE_COMMENT -->\n${htmlContent}`
+              body: `<!-- CODE_COVERAGE_COMMENT -->\n${htmlContent}\n <a href="https://www.google.ca">https://www.google.ca</a>`
             });
           } else {
             console.log('Creating new comment');
