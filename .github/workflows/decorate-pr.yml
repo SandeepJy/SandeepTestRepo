@@ -1,0 +1,37 @@
+name: Decorate PR
+on:
+  pull_request:
+    types:
+      - opened
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+  issues: read
+
+jobs:
+  setup:
+    name: Update PR
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number:context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '<!-- CODE_COVERAGE_COMMENT --> https://www.google.ca'
+            })
+
+      - uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.addAssignees({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              assignees: '${{ github.actor }}'
+            })
