@@ -20,7 +20,7 @@ jobs:
       # Step to fetch code coverage from the mock URL
       - name: Fetch Code Coverage from Mock URL
         run: |
-          curl -s "https://dummyjson.com/c/1258-9916-40a0-a97e" > coverage.json
+          curl -s "https://dummyjson.com/c/21bc-40bc-44b0-ad00" > coverage.json
 
       # Step to parse JSON and generate HTML content using jq
       - name: Parse JSON and Generate HTML Content
