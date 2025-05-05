@@ -23,7 +23,7 @@ jobs:
               issue_number:context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body:  `<!-- 22CODE_COVERAGE_COMMENT -->\nHello there`
+              body:  `<!-- CODE_COVERAGE_COMMENT -->\n<a href="https://www.google.ca">www.google.ca</a>`
             })
 
       - uses: actions/github-script@v6
