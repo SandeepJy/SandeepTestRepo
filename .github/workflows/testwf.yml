@@ -20,8 +20,9 @@ jobs:
 
       - name: Checkout repository
         uses: actions/checkout@v3
-        
-      - name: Run env
+
+      - name: Run Fastlane Setup
+        id: fastlane_setup
         uses: ./.github/workflows/env.yml
         with:
           fastlane_subdir: "iOS"
