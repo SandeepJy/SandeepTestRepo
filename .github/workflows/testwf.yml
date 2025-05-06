@@ -1,11 +1,10 @@
-
+# .github/workflows/testwf.yml
 name: Update PR with SonarQube Code Coverage
 
 on:
   pull_request:
     branches:
       - main
-
 
 jobs:
   setup:
@@ -21,8 +20,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      # Step to call the reusable workflow
       - name: Run Fastlane Setup
-        id: fastlane_setup
         uses: ./.github/workflows/setupFastlane.yml
         with:
           fastlane_subdir: "iOS"
