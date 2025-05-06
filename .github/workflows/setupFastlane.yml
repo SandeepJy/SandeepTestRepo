@@ -1,4 +1,5 @@
-name: Reusable Workflow
+# .github/workflows/setupFastlane.yml
+name: Setup Fastlane Directory
 
 on:
   workflow_call:
