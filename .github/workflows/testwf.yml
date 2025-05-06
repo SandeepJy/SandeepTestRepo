@@ -17,6 +17,12 @@ jobs:
       pull-requests: write
 
     steps:
+
+      - name: Run env
+        uses: ./.github/workflows/env.yml
+        with:
+          fastlane_subdir: "iOS"
+
       # Step to fetch code coverage from the mock URL
       - name: Fetch Code Coverage from Mock URL
         run: |
