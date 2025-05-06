@@ -12,10 +12,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
       - name: Set environment variable based on input
         env:
           FASTLANE_DIR: ${{ github.workspace }}/${{ inputs.fastlane_subdir }}
