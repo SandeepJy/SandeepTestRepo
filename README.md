@@ -1,5 +1,6 @@
 # SandeepTestRepo
 
+```ruby
 #!/usr/bin/env ruby
 # Usage: FIGMA_TOKEN=xxx ruby figma_reduce.rb FILE_KEY NODE_ID [LIBRARY_FILE_KEY] [--md]
 require 'net/http'
@@ -150,3 +151,4 @@ if AS_MD
 else
   puts JSON.pretty_generate(ir)
 end
+```
